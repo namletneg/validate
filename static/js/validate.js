@@ -2,7 +2,23 @@
  * Created by f on 2015/10/12.
  */
 (function ($) {
-    $.fn.validate = function () {
+    var // 获取数据
+        getDate = function (url, _date, callback) {
+            $.getScript(url, function () {
+                if (typeof window[_date] === 'object') {
+                    callback && callback(window[_date]);
+                }
+            });
+        };
+
+    /**
+     * @description 表单验证
+     * arguments[0] object
+     * success: function  表单验证成功事件 @param 为 form
+     * error: function 表单验证失败事件，@param 为 element
+     * elementsSuccess: function element验证成功事件，@param 为 element
+     */
+    $.fn.validate = function (option) {
         var $self = this,
             rules = {
                 requisite: /^\s*$/,   // 0 or 多个空格
@@ -10,13 +26,15 @@
                 number: /^\d+$/
             },
         // 添加规则
-            addRules = function (key, value) {
-                rules[key] = value;
-                return $self;
-            },
-        // el绑上验证规则
-            bindRule = function () {
-
+            addRules = function (newR, value) {
+                if (typeof newR === 'object') {
+                    for (var key in newR) {
+                        rules[key] = newR[key];
+                    }
+                } else if (typeof newR === 'string') {
+                    rules[newR] = value;
+                }
+                return this;
             },
         // 是否匹配
             isMatch = function (el) {
@@ -25,15 +43,15 @@
                     terms = $el.data();
 
                 // 判断
-                for(var key in rules){
-                    if(terms[key] === true){
+                for (var key in rules) {
+                    if (terms[key] === true) {
                         return rules[key].test(value);
                     }
                 }
                 return !rules.requisite.test(value);
             },
         // 提交表单前检测
-            eve = function (successCallback, errorCallback) {
+            eve = function (successCallback, errorCallback, elementSuccessCallback) {
                 var $el = $self.find('.requisite'),
                     isPass;
 
@@ -45,20 +63,25 @@
                     }
                     // 通过检测
                     isPass = true;
+                    elementSuccessCallback && elementSuccessCallback(this);
                 });
-                isPass && successCallback();
+                isPass && successCallback($self[0]);
             },
             init = function () {
-                eve(function () {
-                    console.log('success')
-                }, function () {
-                    console.log('error')
+                $self.on('click', '#submit', function () {
+                    eve(option.success, option.error, option.elementsSuccess);
                 });
             };
 
         init();
-        return {
+        return{
             addRules: addRules
         }
     };
+
+    // el绑定接口验证
+    $.fn.bindInterface = function (url, _date, func) {
+        getDate(url, _date, func);
+    };
+
 })(jQuery);
