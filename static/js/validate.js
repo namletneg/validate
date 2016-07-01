@@ -14,15 +14,21 @@
                 value = $el.val(),
                 terms = $el.data(),
                 rules = reRules,
-                key;
+                key,
+                flag = false;
 
             // 判断
-            for (key in rules) {
-                if (terms[key] === true) {
-                    return rules[key].test(value);
+            for(key in terms){
+                if(rules[key].test(value)){
+                    return true;
                 }
+                flag = true;
             }
-            return !rules.requisite.test(value);
+            if(flag){
+                return false;
+            } else{
+                return !rules.requisite.test(value);
+            }
         },
     // 获取数据
         getDate = function (url, _date, callback) {
